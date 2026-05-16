@@ -1,0 +1,7 @@
+Artificial Intelligence is transforming the world.
+Machine learning is a subset of AI.
+Deep learning uses neural networks with many layers.
+Natural language processing helps computers understand human language.
+RAG stands for Retrieval Augmented Generation.
+RAG combines document retrieval with AI text generation.
+Python is the most popular language for AI development.
