@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RAG System</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1a1a6e, #2d2d9a);
+      padding: 20px 40px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    header h1 { font-size: 28px; color: white; }
+    header p  { color: #aaaadd; font-size: 14px; margin-top: 4px; }
+
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .card {
+      background: #1a1a2e;
+      border: 1px solid #2d2d6e;
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .card h2 {
+      font-size: 16px;
+      color: #7777ff;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab {
+      padding: 8px 20px;
+      border-radius: 8px;
+      border: 1px solid #2d2d6e;
+      background: transparent;
+      color: #7777aa;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.3s;
+      margin-top: 0;
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, #1a1a6e, #4444cc);
+      color: white;
+      border-color: #4444cc;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    textarea {
+      width: 100%;
+      background: #0f0f1a;
+      border: 1px solid #2d2d6e;
+      border-radius: 10px;
+      padding: 14px;
+      color: #e0e0e0;
+      font-size: 14px;
+      resize: vertical;
+      outline: none;
+      font-family: 'Segoe UI', sans-serif;
+      transition: border-color 0.3s;
+    }
+
+    textarea:focus { border-color: #5555ff; }
+
+    input[type="text"] {
+      width: 100%;
+      background: #0f0f1a;
+      border: 1px solid #2d2d6e;
+      border-radius: 10px;
+      padding: 14px;
+      color: #e0e0e0;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    input[type="text"]:focus { border-color: #5555ff; }
+
+    .pdf-upload {
+      border: 2px dashed #2d2d6e;
+      border-radius: 12px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .pdf-upload:hover {
+      border-color: #5555ff;
+      background: #0f0f2a;
+    }
+
+    .pdf-upload input { display: none; }
+
+    .pdf-upload .icon { font-size: 36px; margin-bottom: 8px; }
+
+    .pdf-upload p {
+      color: #7777aa;
+      font-size: 13px;
+    }
+
+    .pdf-name {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #aaaaff;
+      display: none;
+    }
+
+    button {
+      margin-top: 12px;
+      padding: 12px 28px;
+      background: linear-gradient(135deg, #1a1a6e, #4444cc);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #2222aa, #5555ff);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(85,85,255,0.3);
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 13px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .status.success {
+      background: #0a2a0a;
+      border: 1px solid #2a6a2a;
+      color: #44dd44;
+      display: block;
+    }
+
+    .status.error {
+      background: #2a0a0a;
+      border: 1px solid #6a2a2a;
+      color: #ff6666;
+      display: block;
+    }
+
+    .status.loading {
+      background: #0a0a2a;
+      border: 1px solid #2a2a6a;
+      color: #aaaaff;
+      display: block;
+    }
+
+    .answer-box {
+      background: #0f0f1a;
+      border: 1px solid #2d2d6e;
+      border-radius: 10px;
+      padding: 16px;
+      font-size: 14px;
+      line-height: 1.8;
+      color: #ccccff;
+      min-height: 80px;
+      display: none;
+    }
+
+    .answer-box.visible { display: block; }
+
+    .chunks-info {
+      font-size: 12px;
+      color: #7777aa;
+      margin-top: 6px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .input-row input { flex: 1; margin: 0; }
+    .input-row button { margin: 0; white-space: nowrap; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🧠 RAG System</h1>
+  <p>Retrieval Augmented Generation — powered by Google Gemini</p>
+</header>
+
+<div class="container">
+
+  <!-- STEP 1: INGEST -->
+  <div class="card">
+    <h2>📄 Step 1 — Ingest Your Document</h2>
+
+    <!-- TABS -->
+    <div class="tab-bar">
+      <button class="tab active" onclick="switchTab('text')">
+        📝 Paste Text
+      </button>
+      <button class="tab" onclick="switchTab('pdf')">
+        📄 Upload PDF
+      </button>
+    </div>
+
+    <!-- TEXT TAB -->
+    <div class="tab-content active" id="tab-text">
+      <textarea id="docText" rows="7"
+        placeholder="Paste your document text here..."></textarea>
+      <button onclick="ingestText()">📥 Ingest Text</button>
+    </div>
+
+    <!-- PDF TAB -->
+    <div class="tab-content" id="tab-pdf">
+      <div class="pdf-upload" onclick="document.getElementById('pdfInput').click()">
+        <input type="file" id="pdfInput" accept=".pdf"
+          onchange="showPdfName(this)" />
+        <div class="icon">📄</div>
+        <p>Click to select a PDF file</p>
+        <p style="font-size:11px; margin-top:4px">Supports any PDF document</p>
+      </div>
+      <div class="pdf-name" id="pdfName"></div>
+      <button onclick="ingestPDF()">📥 Ingest PDF</button>
+    </div>
+
+    <div class="status" id="ingestStatus"></div>
+    <div class="chunks-info" id="chunksInfo"></div>
+  </div>
+
+  <!-- STEP 2: ASK -->
+  <div class="card">
+    <h2>❓ Step 2 — Ask a Question</h2>
+    <div class="input-row">
+      <input type="text" id="question"
+        placeholder="Ask anything about your document..."
+        onkeydown="if(event.key==='Enter') askQuestion()" />
+      <button onclick="askQuestion()">🔍 Ask</button>
+    </div>
+    <div class="status" id="askStatus"></div>
+  </div>
+
+  <!-- ANSWER -->
+  <div class="card">
+    <h2>🤖 Answer</h2>
+    <div class="answer-box" id="answerBox"></div>
+  </div>
+
+</div>
+
+<script>
+  // Switch tabs
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'))
+    document.getElementById('tab-' + tab).classList.add('active')
+    event.target.classList.add('active')
+  }
+
+  // Show PDF filename
+  function showPdfName(input) {
+    const nameEl = document.getElementById('pdfName')
+    if (input.files[0]) {
+      nameEl.textContent = '📄 ' + input.files[0].name
+      nameEl.style.display = 'block'
+    }
+  }
+
+  // Ingest text
+  async function ingestText() {
+    const text = document.getElementById('docText').value.trim()
+    if (!text) {
+      showStatus('ingestStatus', 'Please paste some text first!', 'error')
+      return
+    }
+    showStatus('ingestStatus', '⏳ Processing... please wait', 'loading')
+    try {
+      const res = await fetch('/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      })
+      const data = await res.json()
+      showStatus('ingestStatus', '✅ Document ingested!', 'success')
+      document.getElementById('chunksInfo').textContent =
+        `Created ${data.chunks} chunks and embedded them.`
+    } catch(e) {
+      showStatus('ingestStatus', '❌ Error: ' + e.message, 'error')
+    }
+  }
+
+  // Ingest PDF
+  async function ingestPDF() {
+    const file = document.getElementById('pdfInput').files[0]
+    if (!file) {
+      showStatus('ingestStatus', 'Please select a PDF first!', 'error')
+      return
+    }
+    showStatus('ingestStatus', '⏳ Reading PDF... please wait', 'loading')
+    try {
+      const formData = new FormData()
+      formData.append('pdf', file)
+      const res = await fetch('/ingest-pdf', {
+        method: 'POST',
+        body: formData
+      })
+      const data = await res.json()
+      showStatus('ingestStatus', '✅ PDF ingested successfully!', 'success')
+      document.getElementById('chunksInfo').textContent =
+       `Created ${data.chunks || data.message} chunks from your PDF.`
+    } catch(e) {
+      showStatus('ingestStatus', '❌ Error: ' + e.message, 'error')
+    }
+  }
+
+  // Ask question
+  async function askQuestion() {
+    const question = document.getElementById('question').value.trim()
+    if (!question) {
+      showStatus('askStatus', 'Please type a question!', 'error')
+      return
+    }
+    showStatus('askStatus', '⏳ Finding answer... please wait', 'loading')
+    document.getElementById('answerBox').classList.remove('visible')
+    try {
+      const res = await fetch('/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question })
+      })
+      const data = await res.json()
+      showStatus('askStatus', '✅ Answer found!', 'success')
+      document.getElementById('answerBox').textContent = data.answer
+      document.getElementById('answerBox').classList.add('visible')
+    } catch(e) {
+      showStatus('askStatus', '❌ Error: ' + e.message, 'error')
+    }
+  }
+
+  function showStatus(id, msg, type) {
+    const el = document.getElementById(id)
+    el.textContent = msg
+    el.className = 'status ' + type
+  }
+</script>
+
+</body>
+</html>

@@ -4,7 +4,7 @@ from google import genai
 # =====================
 # SETUP
 # =====================
-API_KEY = "AIzaSyA_NI_Evj5huXnKcZPhmgkwC8CcyxV2K5g"
+API_KEY = "AIzaSyCiRwUf9EGmIlobdAih5Q5y5umvlPFX31k"
 client = genai.Client(api_key=API_KEY)
 
 # =====================
@@ -63,10 +63,7 @@ def search_chunks(query, embedded_chunks, top_k=2):
 # STEP 6: GENERATION
 # =====================
 def generate_answer(question, relevant_chunks):
-    # combine all relevant chunks into one context
     context = "\n".join([chunk["text"] for chunk in relevant_chunks])
-
-    # build the prompt
     prompt = f"""You are a helpful assistant.
 Use ONLY the context below to answer the question.
 If the answer is not in the context, say 'I don't know'.
@@ -77,47 +74,8 @@ Context:
 Question: {question}
 
 Answer:"""
-
-    # send to Gemini
     response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=prompt
     )
     return response.text
-
-# =====================
-# FULL RAG PIPELINE
-# =====================
-
-# Step 2: Load
-print("⏳ Loading document...")
-text = load_document('my_document.txt')
-print("✅ Document loaded!")
-
-# Step 3: Chunk
-chunks = chunk_text(text, chunk_size=100, overlap=20)
-print(f"✅ Created {len(chunks)} chunks!")
-
-# Step 4: Embed
-print("⏳ Creating embeddings...")
-embedded_chunks = []
-for i, chunk in enumerate(chunks):
-    embedding = get_embedding(chunk)
-    embedded_chunks.append({
-        "id": i,
-        "text": chunk,
-        "embedding": embedding
-    })
-print(f"✅ All {len(chunks)} chunks embedded!")
-
-# Step 5 + 6: Ask a question!
-print("\n" + "="*40)
-question = "What is RAG and what does it stand for?"
-print(f"❓ Question: {question}")
-
-relevant_chunks = search_chunks(question, embedded_chunks)
-print(f"✅ Found {len(relevant_chunks)} relevant chunks!")
-
-answer = generate_answer(question, relevant_chunks)
-print(f"\n🤖 Answer: {answer}")
-print("="*40)
